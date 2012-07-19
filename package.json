@@ -1,0 +1,30 @@
+{
+  "name": "pygmentsjs",
+  "version": "0.0.0",
+  "description": "Python server and JavaScript client talking via stdin/stdout to highlight code using the pygments highlighter.",
+  "main": "pygmentsjs.js",
+  "scripts": {
+    "test": "mocha"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/thlorenz/pygmentsjs.git"
+  },
+  "keywords": [
+    "syntax",
+    "highlight",
+    "pygments"
+  ],
+  "author": "Thorsten Lorenz <thlorenz@gmx.de> (http://thorstenlorenz/wordpress.com)",
+  "licenses": [
+    {
+      "type": "MIT",
+      "url": "http://www.opensource.org/licenses/mit-license.php"
+    }
+  ],
+  "devDependencies": {
+    "proxyquire": "~0.2.1",
+    "should": "~1.0.0",
+    "mocha": "~1.3.0"
+  }
+}
