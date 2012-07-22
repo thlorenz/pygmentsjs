@@ -11,19 +11,26 @@ if os.path.exists( sockfile ):
  
 print "Opening socket..."
 
-server = socket.socket( socket.AF_UNIX, socket.SOCK_DGRAM )
+server = socket.socket( socket.AF_UNIX, socket.SOCK_STREAM )
 server.bind(sockfile)
+server.listen(9)
  
 print "Listening..."
 while True:
-  datagram = server.recv( 1024 )
-  if not datagram:
-    break
-  else:
-    print "-" * 20
-    print datagram
-    if "DONE" == datagram:
-      break
+  conn, addr = server.accept()
+
+  print 'accepted connection'
+
+  while True: 
+
+    data = conn.recv( 1024 )
+    if not data:
+        break
+    else:
+        print "-" * 20
+        print data
+        if "DONE" == data:
+            break
 print "-" * 20
 print "Shutting down..."
 

@@ -8,7 +8,7 @@ sockfile = "./communicate.sock"
 print "Connecting..."
 
 if os.path.exists( sockfile ):
-  client = socket.socket( socket.AF_UNIX, socket.SOCK_DGRAM )
+  client = socket.socket( socket.AF_UNIX, socket.SOCK_STREAM )
   client.connect( sockfile )
   print "Ready."
   print "Ctrl-C to quit."
