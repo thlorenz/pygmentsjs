@@ -27,15 +27,17 @@ def process_request (json_string):
     print 'processing task: %s' % task
     if task == 'pygmentize':
         args = req['args']
-        print 'pygmentizing %s ' % args
+        code = req['code']
+        log.debug('pygmentizing %s ' % args)
 
-        highlighted = pygmentizer.process(['server.py'] + args)
+        (exit_code, highlighted, err) = pygmentizer.process(['server.py'] + args, code)
+        log.debug('pygmentizer exited with: %d' % exit_code)
+
+        if (err):
+          log.error(err)
         return 'done'
 
 
-(exit_code, highlighted) = pygmentizer.process(['server.py'] + ['-f', 'html', '-g', __file__])
-print highlighted
-print 'Exit Code: ', exit_code
 
 def main ():
     if os.path.exists(sockfile): os.remove(sockfile)
@@ -91,5 +93,5 @@ def main ():
             conn.close()
 
     
-# main()
+main()
 
