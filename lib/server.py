@@ -8,7 +8,7 @@ script_path = os.path.dirname( os.path.realpath( __file__ ) )
 pygments_path = os.path.join(script_path, '../../readarepo-zip/3rd/pygments/pygments/')
 sys.path.append(pygments_path)
 
-import pygments.cmdline 
+import pygmentizer
 
 
 from logger import get_logger
@@ -29,10 +29,13 @@ def process_request (json_string):
         args = req['args']
         print 'pygmentizing %s ' % args
 
-        exit_code = pygments.cmdline.main(['server.py'] + args)
+        highlighted = pygmentizer.process(['server.py'] + args)
         return 'done'
 
 
+(exit_code, highlighted) = pygmentizer.process(['server.py'] + ['-f', 'html', '-g', __file__])
+print highlighted
+print 'Exit Code: ', exit_code
 
 def main ():
     if os.path.exists(sockfile): os.remove(sockfile)
@@ -88,5 +91,5 @@ def main ():
             conn.close()
 
     
-main()
+# main()
 
