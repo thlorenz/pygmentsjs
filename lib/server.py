@@ -4,6 +4,8 @@ import os
 import socket
 import json
 
+import time
+
 script_path = os.path.dirname( os.path.realpath( __file__ ) )
 pygments_path = os.path.join(script_path, '../../readarepo-zip/3rd/pygments/pygments/')
 sys.path.append(pygments_path)
@@ -18,26 +20,33 @@ log = get_logger()
 
 sockfile = "/tmp/pygments_communicate.sock"
 
-
 def process_request (json_string):
+    ts = time.time()
+
+    result = None
     req = json.loads(json_string)
 
     task = req['task']
 
-    print 'processing task: %s' % task
+    log.debug('processing task: %s' % task)
     if task == 'pygmentize':
         args = req['args']
         code = req['code']
-        log.debug('pygmentizing %s ' % args)
+        log.debug('pygmentize %s ' % args.__str__())
 
         (exit_code, highlighted, err) = pygmentizer.process(['server.py'] + args, code)
         log.debug('pygmentizer exited with: %d' % exit_code)
 
         if (err):
           log.error(err)
-        return 'done'
 
+        result = { 'exitCode': exit_code, 'res': highlighted, 'err': err }
 
+        
+    te = time.time()
+    dt = te - ts
+    log.debug('took %f secods' % dt)
+    return json.dumps(result)
 
 def main ():
     if os.path.exists(sockfile): os.remove(sockfile)
@@ -70,7 +79,6 @@ def main ():
 
             # 2. Wait for client request
             req = conn.recv(req_len)
-            print "Request: %s" % req
             # May ack here, but for now we keep it simple
 
             # 3. Process the request
@@ -87,7 +95,9 @@ def main ():
 
         except Exception as err:
             print >> sys.stderr, err.__str__()
-            try: conn.send('SERVER ERROR: ' + err.__str__()) 
+            try: 
+                msg = json.dumps({ 'err': 'SERVER ERROR: ' + err.__str__(), 'exitCode': 1 })
+                conn.send(msg)
             except Exception as err: pass
         finally:
             conn.close()
