@@ -22,33 +22,49 @@ sockfile = "/tmp/pygments_communicate.sock"
 
 def process_request (json_string):
     ts = time.time()
-
     result = None
-    req = json.loads(json_string)
+    shutdown = False
 
-    task = req['task']
+    try: 
+        req = json.loads(json_string)
 
-    log.debug('processing task: %s' % task)
-    if task == 'pygmentize':
-        args = req['args']
-        code = req['code']
-        log.debug('pygmentize %s ' % args.__str__())
+        task = req['task']
 
-        (exit_code, highlighted, err) = pygmentizer.process(['server.py'] + args, code)
-        log.debug('pygmentizer exited with: %d' % exit_code)
+        # Assume things will go wrong until proven otherwise 
+        result = { 'exitCode': 1, 'err': 'Unkown task: ' + task }
 
-        if (err):
-          log.error(err)
+        log.debug('processing task: %s' % task)
 
-        result = { 'exitCode': exit_code, 'res': highlighted, 'err': err }
+        if task == 'pygmentize':
+            args = req['args']
+            code = req['code']
+            log.debug('pygmentize %s ' % args.__str__())
 
-        
-    te = time.time()
-    dt = te - ts
-    log.debug('took %f secods' % dt)
-    return json.dumps(result)
+            (exit_code, highlighted, err) = pygmentizer.process(['server.py'] + args, code)
+            log.debug('pygmentizer exited with: %d' % exit_code)
+
+            if (err):
+                log.error(err)
+
+            result = { 'exitCode': exit_code, 'res': highlighted, 'err': err }
+        elif task == 'stop':
+            result = { 'exitCode': 0, 'res': 'server shutting down' }
+            shutdown = True
+
+            
+        te = time.time()
+        dt = te - ts
+
+        log.debug('took %f secods' % dt)
+
+    except Exception as err:
+        result = { 'exitCode': 1, 'err': err.__str__() }
+    finally:
+        return ( json.dumps(result), shutdown )
+
 
 def main ():
+    shutdown = False
     if os.path.exists(sockfile): os.remove(sockfile)
 
     try:
@@ -66,7 +82,6 @@ def main ():
         conn, addr = sock.accept()
 
         log.debug('Accepted connection')
-        log.debug(conn)
 
         try:
 
@@ -82,7 +97,7 @@ def main ():
             # May ack here, but for now we keep it simple
 
             # 3. Process the request
-            res = process_request(req)
+            (res, shutdown) = process_request(req)
 
             # 4. Tell client length of response
             res_len = len(res)
@@ -101,7 +116,17 @@ def main ():
             except Exception as err: pass
         finally:
             conn.close()
-
+            if (shutdown): break
     
+    # Give client time to receive last response
+    time.sleep(2)
+
+    # Close socket and exit
+    sock.close()
+    if os.path.exists(sockfile): os.remove(sockfile)
+
+    log.debug('Server shut down')
+    exit(0)
+
 main()
 
