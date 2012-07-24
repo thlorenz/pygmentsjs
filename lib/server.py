@@ -123,7 +123,7 @@ def main ():
 
     # Close socket and exit
     sock.close()
-    if os.path.exists(sockfile): os.remove(sockfile)
+    # if os.path.exists(sockfile): os.remove(sockfile)
 
     log.debug('Server shut down')
     exit(0)
